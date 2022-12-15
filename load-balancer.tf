@@ -1,5 +1,5 @@
 resource "azurerm_public_ip" "lb1_pip" {
-  name                = "tf-public-ip"
+  name                = "lb1_pip"
   location            = azurerm_resource_group.rg1.location
   resource_group_name = azurerm_resource_group.rg1.name
   allocation_method   = "Static"
@@ -19,6 +19,13 @@ resource "azurerm_lb" "lb1" {
 resource "azurerm_lb_backend_address_pool" "lb1_bap" {
   name            = "lb1_bap"
   loadbalancer_id = azurerm_lb.lb1.id
+}
+
+resource "azurerm_network_interface_backend_address_pool_association" "lb1_bap_association" {
+  count                   = var.arm_vm_count
+  network_interface_id    = "${element(azurerm_network_interface.nic.*.id, count.index)}"
+  ip_configuration_name   = "${element(azurerm_network_interface.nic.*.ip_configuration.0.name, count.index)}"
+  backend_address_pool_id = azurerm_lb_backend_address_pool.lb1_bap.id
 }
 
 resource "azurerm_lb_probe" "lb1_probe_80" {
